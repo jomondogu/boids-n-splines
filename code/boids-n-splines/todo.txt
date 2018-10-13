@@ -1,0 +1,32 @@
+TODO:
+
+- Track camera to spline
+  - change spline orientation to favour scene
+  - update camera position at every step to equal TrackBall's pos(?)
+  - update camera look vector: pos - origin (or pos - centre of boid flock?)
+
+- Create boid particles
+  - spheres? cubes? facing? will have an alignment vector anyway, could play with orienting object according to that
+  - ideally: random scattering within radius of a point (x/y/z = point.x/y/z + random(0,radius))
+  - need to store within data structure in order to do dynamic iterations
+
+- Boid dynamics
+  - separation
+    - search for other characters within neighbourhood (don't make radius too large)
+    - for each: compute repulsive force
+      - normalize(self - other) * 1/r^2
+    - sum all forces together to produce steering force
+  - alignment
+    - for all neighbours:
+      - average all forward vectors/velocities
+    - steering vector = normalize(average - self forward vector/velocity) * (try 1/r^2)
+  - cohesion
+    - for all neighbours:
+      - average all positions
+    - steering direction = normalize(average - self position) * (try 1/r^2)
+  - collision avoidance
+    -
+
+- Boid POV camera
+  - camera position = position of first boid
+  - camera look = normalize(forward vector - position)
