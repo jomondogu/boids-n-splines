@@ -57,6 +57,10 @@ namespace bns
         atlas::math::Vector computeAlignment(Boid &boid);
 
         atlas::math::Vector computeCohesion(Boid &boid);
+        
+        atlas::math::Vector random2DVector(float max);
+        
+        atlas::math::Vector random3DVector(float max);
 
         float getDistance(Boid &boid1, Boid &boid2);
 
@@ -67,6 +71,8 @@ namespace bns
         GLsizei mIndexCount;
 
         float mFlockRadius;
+        float mViewRadius;
+        float mViewAngle;
         int mNumBoids;
         std::vector<Boid> mBoids;
     };

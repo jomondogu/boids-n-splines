@@ -2,6 +2,6 @@
 
 namespace bns
 {
-    constexpr const char ShaderDirectory[] = "/home/jomondogu/CSC473/boids-n-splines-master/bns/code/boids-n-splines/shaders/";
-    constexpr const char DataDirectory[] = "/home/jomondogu/CSC473/boids-n-splines-master/bns/data/";
+    constexpr const char ShaderDirectory[] = "/Users/stewartm/Downloads/csc473_fall2018_labs-master/labs/code/boids-n-splines/shaders/";
+    constexpr const char DataDirectory[] = "/Users/stewartm/Downloads/csc473_fall2018_labs-master/labs/data/";
 }

@@ -1,6 +1,5 @@
 set(INCLUDE_LIST
     "${LAB_INCLUDE_ROOT}/BoidScene.hpp"
-    "${LAB_INCLUDE_ROOT}/QuaternionCamera.hpp"
     "${LAB_INCLUDE_ROOT}/Spline.hpp"
     "${LAB_INCLUDE_ROOT}/BoidFlock.hpp"
     )

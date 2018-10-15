@@ -1,6 +1,5 @@
 #pragma once
 
-#include "QuaternionCamera.hpp"
 #include "BoidFlock.hpp"
 #include "Spline.hpp"
 
@@ -29,8 +28,6 @@ namespace bns
         bool mPlay;
         float mFPS;
         float mAnimLength;
-
-        QuaternionCamera mQuatCamera;
 
         atlas::core::Time<float> mAnimTime;
         atlas::utils::FPSCounter mCounter;

@@ -11,7 +11,7 @@ namespace bns
         mCameraMode(0),
         mPlay(false),
         mFPS(60.0f),
-        mAnimLength(30.0f),
+        mAnimLength(10.0f),
         mSpline(int(mAnimLength * mFPS)),
         mCounter(mFPS)
     { }
@@ -29,7 +29,7 @@ namespace bns
             if (button == GLFW_MOUSE_BUTTON_LEFT &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 1)
+                if (mCameraMode == 0)
                 {
                     mCamera.setMovement(MayaMovements::Tumble);
                     mCamera.mouseDown(point);
@@ -38,7 +38,7 @@ namespace bns
             else if (button == GLFW_MOUSE_BUTTON_MIDDLE &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 1)
+                if (mCameraMode == 0)
                 {
                     mCamera.setMovement(MayaMovements::Track);
                     mCamera.mouseDown(point);
@@ -47,7 +47,7 @@ namespace bns
             else if (button == GLFW_MOUSE_BUTTON_RIGHT &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 1)
+                if (mCameraMode == 0)
                 {
                     mCamera.setMovement(MayaMovements::Dolly);
                     mCamera.mouseDown(point);
@@ -56,7 +56,7 @@ namespace bns
         }
         else
         {
-            if (mCameraMode == 1)
+            if (mCameraMode == 0)
             {
                 mCamera.mouseUp();
             }
@@ -66,7 +66,7 @@ namespace bns
     void BoidScene::mouseMoveEvent(double xPos, double yPos)
     {
         atlas::utils::Gui::getInstance().mouseMoved(xPos, yPos);
-        if (mCameraMode == 1)
+        if (mCameraMode == 0)
         {
             mCamera.mouseMove(atlas::math::Point2(xPos, yPos));
         }
@@ -76,7 +76,7 @@ namespace bns
     {
         atlas::utils::Gui::getInstance().mouseScroll(xOffset, yOffset);
 
-        if (mCameraMode == 1)
+        if (mCameraMode == 0)
         {
             mCamera.mouseScroll(atlas::math::Point2(xOffset, yOffset));
         }
@@ -96,26 +96,28 @@ namespace bns
 
             mSpline.updateGeometry(mAnimTime);
             mBoidFlock.updateGeometry(mAnimTime);
-
+            /*
             if (mSpline.doneInterpolation())
             {
                 mPlay = false;
                 return;
             }
+             */
         }
 
         if(mCameraMode == 0)
         {
-            auto point = mSpline.getPosition();
-            mCamera.setCameraPosition(point);
+            mCamera.setCameraPosition({20,20,20});
         }
         else if(mCameraMode == 1)
         {
-            mCamera.setCameraPosition({30,30,30});
+            auto point = mSpline.getPosition();
+            mCamera.setCameraPosition(point);
         }
         else if(mCameraMode ==2)
         {
-            mCamera.setCameraPosition(mBoidFlock.getBoidPosition());
+            atlas::math::Vector offset = {0,0.2f,0};
+            mCamera.setCameraPosition(mBoidFlock.getBoidPosition() + offset);
             //mCamera.target = mBoidFlock.getBoidLook();
         }
     }
@@ -142,10 +144,6 @@ namespace bns
         // Global HUD
         ImGui::SetNextWindowSize(ImVec2(350, 150), ImGuiSetCond_FirstUseEver);
         ImGui::Begin("Global HUD");
-        if (ImGui::Button("Reset Camera"))
-        {
-            mCamera.resetCamera();
-        }
 
         if (mPlay)
         {
@@ -161,17 +159,25 @@ namespace bns
                 mPlay = !mPlay;
             }
         }
-
-        if (ImGui::Button("Reset"))
+        
+        if (ImGui::Button("Reset Camera"))
         {
+            mCamera.resetCamera();
             mSpline.resetGeometry();
+            mAnimTime.currentTime = 0.0f;
+            mAnimTime.totalTime = 0.0f;
+            mPlay = false;
+        }
+        
+        if (ImGui::Button("Reset Boids"))
+        {
             mBoidFlock.resetGeometry();
             mAnimTime.currentTime = 0.0f;
             mAnimTime.totalTime = 0.0f;
             mPlay = false;
         }
 
-        std::vector<const char*> options = { "Tracking", "Stage", "Boid POV" };
+        std::vector<const char*> options = { "Stage", "Spline Track", "Boid POV" };
         ImGui::Combo("Camera mode: ", &mCameraMode, options.data(),
             ((int)options.size()));
 
