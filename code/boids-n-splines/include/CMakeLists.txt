@@ -1,9 +1,8 @@
 set(INCLUDE_LIST
     "${LAB_INCLUDE_ROOT}/BoidScene.hpp"
-    "${LAB_INCLUDE_ROOT}/Dragon.hpp"
     "${LAB_INCLUDE_ROOT}/QuaternionCamera.hpp"
     "${LAB_INCLUDE_ROOT}/Spline.hpp"
-    "${LAB_INCLUDE_ROOT}/TrackBall.hpp"
+    "${LAB_INCLUDE_ROOT}/BoidFlock.hpp"
     )
 
 set(PATH_INCLUDE "${LAB_INCLUDE_ROOT}/Paths.hpp")

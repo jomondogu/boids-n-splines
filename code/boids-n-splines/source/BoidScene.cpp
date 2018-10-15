@@ -11,7 +11,7 @@ namespace bns
         mCameraMode(0),
         mPlay(false),
         mFPS(60.0f),
-        mAnimLength(10.0f),
+        mAnimLength(30.0f),
         mSpline(int(mAnimLength * mFPS)),
         mCounter(mFPS)
     { }
@@ -29,55 +29,36 @@ namespace bns
             if (button == GLFW_MOUSE_BUTTON_LEFT &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 0)
+                if (mCameraMode == 1)
                 {
                     mCamera.setMovement(MayaMovements::Tumble);
                     mCamera.mouseDown(point);
-                }
-                else
-                {
-                    mQuatCamera.setMovement(MayaMovements::Tumble);
-                    mQuatCamera.mouseDown(point);
                 }
             }
             else if (button == GLFW_MOUSE_BUTTON_MIDDLE &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 0)
+                if (mCameraMode == 1)
                 {
                     mCamera.setMovement(MayaMovements::Track);
                     mCamera.mouseDown(point);
-                }
-                else
-                {
-                    mQuatCamera.setMovement(MayaMovements::Track);
-                    mQuatCamera.mouseDown(point);
                 }
             }
             else if (button == GLFW_MOUSE_BUTTON_RIGHT &&
                 modifiers == GLFW_MOD_SHIFT)
             {
-                if (mCameraMode == 0)
+                if (mCameraMode == 1)
                 {
                     mCamera.setMovement(MayaMovements::Dolly);
                     mCamera.mouseDown(point);
-                }
-                else
-                {
-                    mQuatCamera.setMovement(MayaMovements::Dolly);
-                    mQuatCamera.mouseDown(point);
                 }
             }
         }
         else
         {
-            if (mCameraMode == 0)
+            if (mCameraMode == 1)
             {
                 mCamera.mouseUp();
-            }
-            else
-            {
-                mQuatCamera.mouseUp();
             }
         }
     }
@@ -85,13 +66,9 @@ namespace bns
     void BoidScene::mouseMoveEvent(double xPos, double yPos)
     {
         atlas::utils::Gui::getInstance().mouseMoved(xPos, yPos);
-        if (mCameraMode == 0)
+        if (mCameraMode == 1)
         {
             mCamera.mouseMove(atlas::math::Point2(xPos, yPos));
-        }
-        else
-        {
-            mQuatCamera.mouseMove(atlas::math::Point2(xPos, yPos));
         }
     }
 
@@ -99,13 +76,9 @@ namespace bns
     {
         atlas::utils::Gui::getInstance().mouseScroll(xOffset, yOffset);
 
-        if (mCameraMode == 0)
+        if (mCameraMode == 1)
         {
             mCamera.mouseScroll(atlas::math::Point2(xOffset, yOffset));
-        }
-        else
-        {
-            mQuatCamera.mouseScroll(atlas::math::Point2(xOffset, yOffset));
         }
     }
 
@@ -122,19 +95,29 @@ namespace bns
             mAnimTime.totalTime = mAnimTime.currentTime;
 
             mSpline.updateGeometry(mAnimTime);
+            mBoidFlock.updateGeometry(mAnimTime);
 
             if (mSpline.doneInterpolation())
             {
                 mPlay = false;
                 return;
             }
-
         }
 
-        auto point = mSpline.getPosition();
-        auto mat = glm::translate(atlas::math::Matrix4(1.0f), point);
-
-        mBall.transformGeometry(mat);
+        if(mCameraMode == 0)
+        {
+            auto point = mSpline.getPosition();
+            mCamera.setCameraPosition(point);
+        }
+        else if(mCameraMode == 1)
+        {
+            mCamera.setCameraPosition({30,30,30});
+        }
+        else if(mCameraMode ==2)
+        {
+            mCamera.setCameraPosition(mBoidFlock.getBoidPosition());
+            //mCamera.target = mBoidFlock.getBoidLook();
+        }
     }
 
     void BoidScene::renderScene()
@@ -150,22 +133,18 @@ namespace bns
             glm::radians(mCamera.getCameraFOV()),
             (float)mWidth / mHeight, 1.0f, 100000000.0f);
 
-        mView = (mCameraMode == 0) ? mCamera.getCameraMatrix() :
-            mQuatCamera.getCameraMatrix();
-
+        mView = mCamera.getCameraMatrix();
 
         mGrid.renderGeometry(mProjection, mView);
-        mDragon.renderGeometry(mProjection, mView);
-        mBall.renderGeometry(mProjection, mView);
+        mBoidFlock.renderGeometry(mProjection, mView);
         mSpline.renderGeometry(mProjection, mView);
 
         // Global HUD
-        ImGui::SetNextWindowSize(ImVec2(350, 350), ImGuiSetCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(350, 150), ImGuiSetCond_FirstUseEver);
         ImGui::Begin("Global HUD");
         if (ImGui::Button("Reset Camera"))
         {
             mCamera.resetCamera();
-            mQuatCamera.resetCamera();
         }
 
         if (mPlay)
@@ -186,16 +165,17 @@ namespace bns
         if (ImGui::Button("Reset"))
         {
             mSpline.resetGeometry();
+            mBoidFlock.resetGeometry();
             mAnimTime.currentTime = 0.0f;
             mAnimTime.totalTime = 0.0f;
             mPlay = false;
         }
 
-        std::vector<const char*> options = { "Maya Camera", "Quaternion Camera" };
+        std::vector<const char*> options = { "Tracking", "Stage", "Boid POV" };
         ImGui::Combo("Camera mode: ", &mCameraMode, options.data(),
             ((int)options.size()));
 
-        ImGui::Text("Application average %.3f ms/frame (%.1FPS)",
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
             1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
 

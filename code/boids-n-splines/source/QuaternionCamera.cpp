@@ -56,7 +56,11 @@ namespace bns
         case atlas::tools::MayaMovements::Tumble:
         {
             delta *= 0.005f;
-            // TODO: Fill in the rotation logic using quaternions.
+
+            glm::quat temp = glm::quat(glm::vec3(-delta.y,delta.x,0));          // Define your axis here.
+            mQuat = temp * mQuat;                                               // Accumulate the rotation.
+            mQuat = glm::normalize(mQuat);                                      // Normalize the quaternion.
+
             break;
         }
 

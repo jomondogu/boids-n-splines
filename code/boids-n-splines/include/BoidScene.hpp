@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Dragon.hpp"
 #include "QuaternionCamera.hpp"
-#include "TrackBall.hpp"
+#include "BoidFlock.hpp"
 #include "Spline.hpp"
 
 #include <atlas/tools/ModellingScene.hpp>
@@ -31,13 +30,12 @@ namespace bns
         float mFPS;
         float mAnimLength;
 
-        Dragon mDragon;
         QuaternionCamera mQuatCamera;
 
         atlas::core::Time<float> mAnimTime;
         atlas::utils::FPSCounter mCounter;
 
-        TrackBall mBall;
+        BoidFlock mBoidFlock;
         Spline mSpline;
     };
 }

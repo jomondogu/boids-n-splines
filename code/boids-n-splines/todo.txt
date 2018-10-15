@@ -1,26 +1,33 @@
 TODO:
 
 - Track camera to spline
-  - change spline orientation to favour scene
-  - update camera position at every step to equal TrackBall's pos(?)
-  - update camera look vector: pos - origin (or pos - centre of boid flock?)
+  + change spline orientation to favour scene
+  + update camera position at every step to equal point on spline
+  - update camera look vector (try pos - centre of boid flock)
 
 - Create boid particles
-  - spheres? cubes? facing? will have an alignment vector anyway, could play with orienting object according to that
-  - ideally: random scattering within radius of a point (x/y/z = point.x/y/z + random(0,radius))
-  - need to store within data structure in order to do dynamic iterations
+  + start with spheres
+  + ideally: random scattering within radius of a point (x/y/z = point.x/y/z + random(0,radius))
+  + need to store within data structure in order to do dynamic iterations
+    + list of boid objects, each needs:
+      + position
+      + forward vector
+      + velocity
+      + steering force
+  - try non-spheres oriented according to forward vector
 
 - Boid dynamics
+  + assign x-ward force first to test animation
   - separation
     - search for other characters within neighbourhood (don't make radius too large)
     - for each: compute repulsive force
-      - normalize(self - other) * 1/r^2
+      - normalize(self - other) * 1/r^2 (remember 1/0 fix)
     - sum all forces together to produce steering force
-  - alignment
+  + alignment
     - for all neighbours:
       - average all forward vectors/velocities
     - steering vector = normalize(average - self forward vector/velocity) * (try 1/r^2)
-  - cohesion
+  + cohesion
     - for all neighbours:
       - average all positions
     - steering direction = normalize(average - self position) * (try 1/r^2)
@@ -28,5 +35,5 @@ TODO:
     -
 
 - Boid POV camera
-  - camera position = position of first boid
+   camera position = position of first boid
   - camera look = normalize(forward vector - position)

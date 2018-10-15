@@ -35,10 +35,10 @@ namespace bns
 
         mControlPoints = std::vector<Point>
         {
-            { -20, 5, 0 },
-            { -19, 5, -15 },
-            { 12.7f, -5, -1.4f },
-            { 20, 8.2f, 4.4f }
+            { -30, 0, 0 },
+            { 0, 4, -30 },
+            { 30, 8, 0 },
+            { 0, 12, 30 }
         };
 
         std::vector<Point> splinePoints;
