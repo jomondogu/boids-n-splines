@@ -27,7 +27,7 @@ namespace bns
 
         mIndexCount = static_cast<GLsizei>(sphere.indices().size());
 
-        mMass = 100000.0f;
+        mMass = 1000.0f;
         mFlockRadius = 5.0f;
         mViewRadius = 1.0f;
         mViewAngle = 0.75 * 3.1419f;
@@ -120,7 +120,7 @@ namespace bns
             atlas::math::Vector avoidance = computeAvoidance(mBoids[i]);
 
             //sum forces & move boids
-            atlas::math::Vector forces = separation*10.0f + alignment*5.0f + cohesion*50.0f + avoidance;
+            atlas::math::Vector forces = separation*3.0f + alignment*100.0f + cohesion*2.0f + avoidance;
             mBoids[i].mVelocity += forces / mMass;
             mBoids[i].mPosition += mBoids[i].mVelocity;
             mBoids[i].mForward = normalize(mBoids[i].mVelocity);
@@ -170,11 +170,6 @@ namespace bns
         mShaders[0].disableShaders();
     }
 
-    void BoidFlock::transformGeometry(atlas::math::Matrix4 const& t)
-    {
-        mModel = t;
-    }
-
     atlas::math::Vector BoidFlock::getBoidPosition()
     {
         return mBoids[0].mPosition;
@@ -195,7 +190,7 @@ namespace bns
 
             float distance = mag(self.mPosition - other.mPosition);
 
-            if(distance > 0 && distance <= mViewRadius &&
+            if(distance > 0 && distance <= mViewRadius * 0.5f &&
                 angle(self.mForward, self.mPosition - other.mPosition) <= mViewAngle)
             {
                 atlas::math::Vector direction = self.mPosition - other.mPosition;
@@ -261,25 +256,21 @@ namespace bns
     atlas::math::Vector BoidFlock::computeAvoidance(Boid &self)
     {
         atlas::math::Vector avoidance = {0,0,0};
-        atlas::math::Vector ahead = (self.mPosition + self.mForward) * 0.5f;
-        atlas::math::Vector ahead2 = ahead * 0.5f;
-        float collisions = 0;
+        atlas::math::Vector ahead = self.mPosition + self.mForward;
 
         for (std::size_t i = 0; i < mBoids.size(); i++)
         {
             Boid other = mBoids[i];
 
             float distance = mag(other.mPosition - self.mPosition);
-            float lineDistance = mag(other.mPosition - ahead);
-            float line2Distance = mag(other.mPosition - ahead2);
+            float aheadDistance = mag(other.mPosition - ahead);
+            float halfDistance = mag(other.mPosition - (ahead * 0.5f));
 
             if((distance > 0) && (distance <= other.mRadius ||
-                lineDistance <= other.mRadius ||
-                line2Distance <= other.mRadius))
+                aheadDistance <= other.mRadius ||
+                halfDistance <= other.mRadius))
             {
-                collisions++;
-                avoidance = ahead - other.mPosition;
-                avoidance = normalize(avoidance);
+                avoidance = normalize(ahead - other.mPosition);
             }
         }
 
