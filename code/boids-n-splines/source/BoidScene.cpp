@@ -96,13 +96,6 @@ namespace bns
 
             mSpline.updateGeometry(mAnimTime);
             mBoidFlock.updateGeometry(mAnimTime);
-            /*
-            if (mSpline.doneInterpolation())
-            {
-                mPlay = false;
-                return;
-            }
-             */
         }
 
         if(mCameraMode == 0)
@@ -159,7 +152,7 @@ namespace bns
                 mPlay = !mPlay;
             }
         }
-        
+
         if (ImGui::Button("Reset Camera"))
         {
             mCamera.resetCamera();
@@ -168,7 +161,7 @@ namespace bns
             mAnimTime.totalTime = 0.0f;
             mPlay = false;
         }
-        
+
         if (ImGui::Button("Reset Boids"))
         {
             mBoidFlock.resetGeometry();

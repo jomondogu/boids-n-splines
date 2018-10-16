@@ -8,6 +8,7 @@
 #include <atlas/utils/GUI.hpp>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 namespace bns
 {
@@ -26,22 +27,23 @@ namespace bns
 
         mIndexCount = static_cast<GLsizei>(sphere.indices().size());
 
-        mFlockRadius = 10.0;
-        mViewRadius = mFlockRadius*0.1f;
-        mViewAngle = 60.0f;
+        mMass = 100000.0f;
+        mFlockRadius = 5.0f;
+        mViewRadius = 1.0f;
+        mViewAngle = 0.75 * 3.1419f;
         mNumBoids = 100;
 
         for (int i = 0; i < mNumBoids; i++)
         {
             atlas::math::Vector rp = normalize(random2DVector(1.0f));
-            
+
             float rr = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * mFlockRadius;
             rp.x *= rr;
             rp.z *= rr;
-            
+
             atlas::math::Vector rv = random2DVector(1.0f);
 
-            Boid mBoid = Boid(rp, rv * 0.001f);
+            Boid mBoid = Boid(rp, rv * 0.001f, 0.15f);
             mBoids.push_back(mBoid);
         }
 
@@ -115,10 +117,11 @@ namespace bns
             atlas::math::Vector separation = computeSeparation(mBoids[i]);
             atlas::math::Vector alignment = computeAlignment(mBoids[i]);
             atlas::math::Vector cohesion = computeCohesion(mBoids[i]);
+            atlas::math::Vector avoidance = computeAvoidance(mBoids[i]);
 
             //sum forces & move boids
-            atlas::math::Vector forces = separation + alignment + cohesion;
-            mBoids[i].mVelocity += forces * 0.00001f;
+            atlas::math::Vector forces = separation*10.0f + alignment*5.0f + cohesion*50.0f + avoidance;
+            mBoids[i].mVelocity += forces / mMass;
             mBoids[i].mPosition += mBoids[i].mVelocity;
             mBoids[i].mForward = normalize(mBoids[i].mVelocity);
         }
@@ -148,17 +151,17 @@ namespace bns
         {
             atlas::math::Vector offset = {0,0.2f,0};
             //draw boid "body"
-            const math::Vector black{ 0.0f, 0.0f, 0.0f };
+            const math::Vector white{ 1.0f, 1.0f, 1.0f };
             auto bodyModel = glm::translate(math::Matrix4(1.0f), mBoids[i].mPosition + offset) * glm::scale(math::Matrix4(1.0f), math::Vector(0.1f));
             glUniformMatrix4fv(mUniforms["model"], 1, GL_FALSE, &bodyModel[0][0]);
-            glUniform3fv(mUniforms["materialColour"], 1, &black[0]);
+            glUniform3fv(mUniforms["materialColour"], 1, &white[0]);
             glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
 
             //draw boid "head"
-            const math::Vector white{ 1.0f, 1.0f, 1.0f };
-            auto headModel = glm::translate(math::Matrix4(1.0f), mBoids[i].mPosition + mBoids[i].mForward/5.0f + offset) * glm::scale(math::Matrix4(1.0f), math::Vector(0.05f));
+            const math::Vector black{ 0.0f, 0.0f, 0.0f };
+            auto headModel = glm::translate(math::Matrix4(1.0f), mBoids[i].mPosition + mBoids[i].mForward*0.15f + offset) * glm::scale(math::Matrix4(1.0f), math::Vector(0.05f));
             glUniformMatrix4fv(mUniforms["model"], 1, GL_FALSE, &headModel[0][0]);
-            glUniform3fv(mUniforms["materialColour"], 1, &white[0]);
+            glUniform3fv(mUniforms["materialColour"], 1, &black[0]);
             glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
         }
 
@@ -185,18 +188,19 @@ namespace bns
     atlas::math::Vector BoidFlock::computeSeparation(Boid &self)
     {
         atlas::math::Vector sForce = {0,0,0};
+
         for (std::size_t i = 0; i < mBoids.size(); i++)
         {
             Boid other = mBoids[i];
-            float distance = getDistance(self,other);
 
-            if(distance > 0 && distance <= mViewRadius){
+            float distance = mag(self.mPosition - other.mPosition);
 
+            if(distance > 0 && distance <= mViewRadius &&
+                angle(self.mForward, self.mPosition - other.mPosition) <= mViewAngle)
+            {
                 atlas::math::Vector direction = self.mPosition - other.mPosition;
-                if (distance < 0.1f) distance = 0.1f;
-                float weight = 10.0 / distance*distance;
+                float weight = 1.0 / distance*distance;
                 sForce += direction * weight;
-                
             }
         }
         return sForce;
@@ -206,37 +210,80 @@ namespace bns
     {
         atlas::math::Vector avgAlignment = {0,0,0};
         float neighbours = 0;
+
         for (std::size_t i = 0; i < mBoids.size(); i++)
         {
             Boid other = mBoids[i];
-            float distance = getDistance(self,other);
+            float distance = mag(self.mPosition - other.mPosition);
 
-            if(distance > 0 && distance <= mViewRadius){
+            if(distance > 0 && distance <= mViewRadius &&
+                angle(self.mForward, self.mPosition - other.mPosition) <= mViewAngle)
+            {
                 avgAlignment += other.mVelocity;
                 neighbours++;
             }
         }
-        if (neighbours > 0) avgAlignment = avgAlignment / neighbours;
-        return (avgAlignment - self.mVelocity);
+        if (neighbours > 0)
+        {
+            avgAlignment = avgAlignment / neighbours;
+            return avgAlignment - self.mVelocity;
+        }
+        return {0,0,0};
     }
 
     atlas::math::Vector BoidFlock::computeCohesion(Boid &self)
     {
         atlas::math::Vector avgPosition = {0,0,0};
         float neighbours = 0;
+
         for (std::size_t i = 0; i < mBoids.size(); i++)
         {
             Boid other = mBoids[i];
-            float distance = getDistance(self,other);
+            float distance = mag(self.mPosition - other.mPosition);
 
-            if(distance > 0 && distance <= mViewRadius){
+            if(distance > 0 && distance <= mViewRadius &&
+                angle(self.mForward, self.mPosition - other.mPosition) <= mViewAngle)
+            {
                 avgPosition += other.mPosition;
                 neighbours++;
             }
         }
-        if (neighbours > 0) avgPosition = avgPosition / neighbours;
 
-        return (avgPosition - self.mPosition);
+        if (neighbours > 0)
+        {
+            avgPosition = avgPosition / neighbours;
+            return (avgPosition - self.mPosition);
+        }
+
+        return {0,0,0};
+    }
+
+    atlas::math::Vector BoidFlock::computeAvoidance(Boid &self)
+    {
+        atlas::math::Vector avoidance = {0,0,0};
+        atlas::math::Vector ahead = (self.mPosition + self.mForward) * 0.5f;
+        atlas::math::Vector ahead2 = ahead * 0.5f;
+        float collisions = 0;
+
+        for (std::size_t i = 0; i < mBoids.size(); i++)
+        {
+            Boid other = mBoids[i];
+
+            float distance = mag(other.mPosition - self.mPosition);
+            float lineDistance = mag(other.mPosition - ahead);
+            float line2Distance = mag(other.mPosition - ahead2);
+
+            if((distance > 0) && (distance <= other.mRadius ||
+                lineDistance <= other.mRadius ||
+                line2Distance <= other.mRadius))
+            {
+                collisions++;
+                avoidance = ahead - other.mPosition;
+                avoidance = normalize(avoidance);
+            }
+        }
+
+        return avoidance;
     }
 
     void BoidFlock::resetGeometry()
@@ -244,17 +291,17 @@ namespace bns
         for (std::size_t i = 0; i < mBoids.size(); i++)
         {
             atlas::math::Vector rp = normalize(random2DVector(1.0f));
-            
+
             float rr = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * mFlockRadius;
             rp.x *= rr;
             rp.z *= rr;
-            
+
             atlas::math::Vector rv = random2DVector(1.0f);
 
-            mBoids[i] = Boid(rp, rv * 0.001f);
+            mBoids[i] = Boid(rp, rv * 0.001f, 0.15f);
         }
     }
-    
+
     atlas::math::Vector BoidFlock::random2DVector(float max)
     {
         float rx = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * max;
@@ -262,7 +309,7 @@ namespace bns
         atlas::math::Vector rv = {2*rx-1,0,2*rz-1};
         return rv;
     }
-    
+
     atlas::math::Vector BoidFlock::random3DVector(float max)
     {
         float rx = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * max;
@@ -272,10 +319,19 @@ namespace bns
         return rv;
     }
 
-    float BoidFlock::getDistance(Boid &boid1, Boid &boid2)
+    float BoidFlock::dot(atlas::math::Vector v1, atlas::math::Vector v2)
     {
-        atlas::math::Vector line = boid1.mPosition - boid2.mPosition;
-        return sqrt(line.x*line.x + line.y*line.y + line.z*line.z);
+        return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    }
+
+    float BoidFlock::mag(atlas::math::Vector v)
+    {
+        return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    }
+
+    float BoidFlock::angle(atlas::math::Vector v1, atlas::math::Vector v2)
+    {
+        return acos(dot(v1,v2)/(mag(v1)*mag(v2)));
     }
 
 }

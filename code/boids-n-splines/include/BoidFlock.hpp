@@ -18,18 +18,21 @@ namespace bns
         mPosition = atlas::math::Vector(0,0,0);
         mVelocity = atlas::math::Vector(0,0,0);
         mForward = normalize(mVelocity);
+        mRadius = 0.5f;
     }
 
-    Boid(atlas::math::Vector position, atlas::math::Vector velocity)
+    Boid(atlas::math::Vector position, atlas::math::Vector velocity, float radius)
     {
         mPosition = position;
         mVelocity = velocity;
         mForward = normalize(mVelocity);
+        mRadius = radius;
     }
 
     atlas::math::Vector mPosition;
     atlas::math::Vector mForward;
     atlas::math::Vector mVelocity;
+    float mRadius;
     };
 
     class BoidFlock : public atlas::utils::Geometry
@@ -57,12 +60,18 @@ namespace bns
         atlas::math::Vector computeAlignment(Boid &boid);
 
         atlas::math::Vector computeCohesion(Boid &boid);
-        
+
+        atlas::math::Vector computeAvoidance(Boid &boid);
+
         atlas::math::Vector random2DVector(float max);
-        
+
         atlas::math::Vector random3DVector(float max);
 
-        float getDistance(Boid &boid1, Boid &boid2);
+        float dot(atlas::math::Vector v1, atlas::math::Vector v2);
+
+        float mag(atlas::math::Vector v);
+
+        float angle(atlas::math::Vector v1, atlas::math::Vector v2);
 
         atlas::gl::Buffer mVertexBuffer;
         atlas::gl::Buffer mIndexBuffer;
@@ -70,6 +79,7 @@ namespace bns
 
         GLsizei mIndexCount;
 
+        float mMass;
         float mFlockRadius;
         float mViewRadius;
         float mViewAngle;

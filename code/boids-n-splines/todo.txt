@@ -14,26 +14,28 @@ TODO:
       + forward vector
       + velocity
       + steering force
-  - try non-spheres oriented according to forward vector
+  - try non-spheres (dragons?) oriented according to forward vector
 
 - Boid dynamics
   + assign x-ward force first to test animation
-  - separation
-    - search for other characters within neighbourhood (don't make radius too large)
-    - for each: compute repulsive force
-      - normalize(self - other) * 1/r^2 (remember 1/0 fix)
-    - sum all forces together to produce steering force
+  + separation
+    + search for other characters within neighbourhood (don't make radius too large)
+    + for each: compute repulsive force
+      + normalize(self - other) * 1/r^2 (remember 1/0 fix)
+    + sum all forces together to produce steering force
   + alignment
-    - for all neighbours:
-      - average all forward vectors/velocities
-    - steering vector = normalize(average - self forward vector/velocity) * (try 1/r^2)
+    + for all neighbours:
+      + average all forward vectors/velocities
+    + steering vector = normalize(average - self forward vector/velocity) * (try 1/r^2)
   + cohesion
-    - for all neighbours:
-      - average all positions
-    - steering direction = normalize(average - self position) * (try 1/r^2)
-  - collision avoidance
-    -
+    + for all neighbours:
+      + average all positions
+    + steering direction = normalize(average - self position) * (try 1/r^2)
+  + collision avoidance
+    + compute vectors ahead & ahead/2
+    + for all neighbours:
+      + compute avoidance vector if ahead or ahead/2 is within neighbour's radius
 
 - Boid POV camera
-   camera position = position of first boid
+  + camera position = position of first boid
   - camera look = normalize(forward vector - position)
